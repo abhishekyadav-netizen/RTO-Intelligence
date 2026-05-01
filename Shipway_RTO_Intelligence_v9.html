@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Shipway — RTO Intelligence</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --navy:#1e293b; --navy-mid:#334155; --navy-light:#475569;
+  --blue:#2563eb; --blue-hover:#1d4ed8; --blue-light:#eff6ff; --blue-mid:#dbeafe;
+  --red:#ef4444; --red-light:#fca5a5; --red-bg:#fef2f2; --red-border:#fecaca;
+  --amber:#f59e0b; --amber-light:#fcd34d; --amber-bg:#fffbeb; --amber-border:#fde68a;
+  --green:#10b981; --green-dark:#059669; --green-light:#6ee7b7; --green-bg:#ecfdf5; --green-border:#a7f3d0;
+  --purple:#7c3aed; --purple-bg:#f5f3ff; --purple-border:#ddd6fe;
+  --bg:#f8fafc; --bg-alt:#f1f5f9; --surface:#ffffff;
+  --border:#e2e8f0; --border-mid:#cbd5e1;
+  --text:#0f172a; --text-muted:#64748b; --text-dim:#94a3b8;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.04);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.04);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.06),0 4px 6px -2px rgba(0,0,0,.04);
+  --r-sm:6px; --r:10px; --r-lg:14px; --r-xl:20px; --r-pill:9999px;
+}
+
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-xs);position:sticky;top:0;z-index:100;}
+.app-header-left{display:flex;align-items:center;gap:16px;}
+.logo-mark{display:flex;align-items:center;gap:9px;}
+.logo-icon{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-icon svg{width:18px;height:18px;fill:white;}
+.logo-text{font-size:16px;font-weight:700;color:var(--navy);letter-spacing:-.01em;}
+.logo-text span{color:var(--blue);}
+.header-divider{width:1px;height:20px;background:var(--border);}
+.header-title{font-size:13px;font-weight:500;color:var(--text-muted);}
+.version-tag{font-size:10px;font-weight:700;letter-spacing:.06em;background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);padding:3px 9px;border-radius:var(--r-pill);}
+.header-right{display:flex;align-items:center;gap:10px;}
+.header-badge{font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:var(--r-pill);}
+
+.tab-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:2px;position:sticky;top:56px;z-index:99;}
+.tab{padding:14px 16px 12px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border:none;border-bottom:2px solid transparent;background:transparent;transition:all .18s;position:relative;bottom:-1px;}
+.tab:hover{color:var(--navy);}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
+
+.main-layout{display:grid;grid-template-columns:268px 1fr;min-height:calc(100vh - 96px);}
+
+.left-panel{background:var(--surface);border-right:1px solid var(--border);padding:20px 18px 24px;display:flex;flex-direction:column;overflow-y:auto;position:sticky;top:96px;height:calc(100vh - 96px);}
+.panel-section-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;margin-top:2px;}
+
+.slider-row{margin-bottom:14px;}
+.slider-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+.slider-label{font-size:12px;color:var(--text-muted);font-weight:500;}
+.slider-value{font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--navy);background:var(--bg);padding:1px 7px;border-radius:4px;border:1px solid var(--border);}
+.slider-limits{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:3px;}
+
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border-mid);border-radius:2px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--red);cursor:pointer;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+
+.select-row{margin-bottom:10px;}
+.select-row label{display:block;font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+select{width:100%;background:var(--surface);border:1px solid var(--border-mid);color:var(--navy);padding:8px 32px 8px 10px;border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:border-color .15s;}
+select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+
+.divider-line{height:1px;background:var(--border);margin:14px 0;}
+
+.analyse-btn{width:100%;margin-top:16px;padding:11px 16px;background:var(--blue);color:white;border:none;border-radius:var(--r-pill);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.02em;box-shadow:0 2px 8px rgba(37,99,235,.3);transition:background .18s,box-shadow .18s,transform .1s;}
+.analyse-btn:hover{background:var(--blue-hover);box-shadow:0 4px 12px rgba(37,99,235,.4);}
+.analyse-btn:active{transform:scale(.98);}
+
+.right-panel{padding:20px 24px 32px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;background:var(--bg);}
+.tab-panel{display:none;flex-direction:column;gap:16px;}
+.tab-panel.active{display:flex;}
+
+.nav-hints{display:flex;flex-wrap:wrap;gap:6px;padding:9px 14px;background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:var(--r);}
+.nav-hint{font-size:11px;color:var(--purple);line-height:1.4;}
+.nav-hint strong{font-weight:700;}
+.nav-hint-sep{font-size:11px;color:var(--border-mid);}
+
+.flow-step{display:flex;flex-direction:column;gap:10px;}
+.flow-step-header{display:flex;align-items:center;gap:10px;}
+.step-badge{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.step-badge.s1{background:var(--red-bg);color:var(--red);border:1.5px solid var(--red-border);}
+.step-badge.s2{background:var(--amber-bg);color:var(--amber);border:1.5px solid var(--amber-border);}
+.step-badge.s3{background:var(--green-bg);color:var(--green);border:1.5px solid var(--green-border);}
+.step-badge.s4{background:var(--blue-light);color:var(--blue);border:1.5px solid var(--blue-mid);}
+.step-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.step-label.s1{color:var(--red);}.step-label.s2{color:var(--amber);}.step-label.s3{color:var(--green);}.step-label.s4{color:var(--blue);}
+
+.say-this{padding:12px 14px;border-radius:var(--r);font-size:12px;color:var(--navy-light);line-height:1.65;border-left:3px solid var(--border-mid);background:var(--surface);box-shadow:var(--shadow-xs);}
+.say-this .say-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;display:block;}
+.say-this em{font-style:normal;font-weight:600;}
+.say-this.s1{border-left-color:var(--red);background:var(--red-bg);}
+.say-this.s1 .say-label{color:var(--red);}.say-this.s1 em{color:var(--red);}
+.say-this.s2{border-left-color:var(--amber);background:var(--amber-bg);}
+.say-this.s2 .say-label{color:var(--amber);}.say-this.s2 em{color:#92400e;}
+.say-this.s3{border-left-color:var(--green);background:var(--green-bg);}
+.say-this.s3 .say-label{color:var(--green);}.say-this.s3 em{color:var(--green-dark);}
+.say-this.s4{border-left-color:var(--blue);background:var(--blue-light);}
+.say-this.s4 .say-label{color:var(--blue);}.say-this.s4 em{color:var(--blue-hover);}
+
+.bullet-cues{display:flex;flex-direction:column;gap:4px;}
+.bullet-cue{display:flex;gap:8px;font-size:12px;color:var(--navy-light);line-height:1.55;}
+.bc-dot{color:var(--text-dim);flex-shrink:0;font-size:10px;margin-top:3px;}
+.bullet-cue em{font-style:normal;font-weight:600;}
+
+.opening-hook{background:var(--surface);border:1px solid var(--red-border);border-radius:var(--r-lg);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;box-shadow:var(--shadow-md);position:relative;overflow:hidden;}
+.opening-hook::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--red-bg) 0%,transparent 60%);pointer-events:none;}
+.hook-left{position:relative;}
+.bleed-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+.bleed-number{font-size:52px;font-weight:700;color:var(--red);font-family:'DM Mono',monospace;letter-spacing:-.03em;line-height:1;}
+.hook-context{font-size:11px;color:var(--text-muted);margin-top:6px;max-width:280px;line-height:1.5;}
+.hook-context strong{color:var(--navy);font-weight:600;}
+.hook-right{display:flex;flex-direction:column;gap:8px;position:relative;}
+.hook-stat{text-align:right;padding:8px 12px;background:white;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-xs);}
+.hook-stat-label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;}
+.hook-stat-value{font-size:16px;font-weight:700;font-family:'DM Mono',monospace;}
+.hook-stat-value.red{color:var(--red);}.hook-stat-value.amber{color:var(--amber);}.hook-stat-value.green{color:var(--green);}
+
+.alerts-strip{display:flex;flex-direction:column;gap:6px;}
+.alert-item{display:flex;align-items:flex-start;gap:10px;padding:9px 13px;border-radius:var(--r-sm);font-size:12px;line-height:1.5;box-shadow:var(--shadow-xs);}
+.alert-item.alert-red{background:var(--red-bg);border:1px solid var(--red-border);color:#991b1b;}
+.alert-item.alert-yellow{background:var(--amber-bg);border:1px solid var(--amber-border);color:#78350f;}
+.alert-item.alert-green{background:var(--green-bg);border:1px solid var(--green-border);color:#065f46;}
+.alert-item.alert-blue{background:var(--blue-light);border:1px solid var(--blue-mid);color:#1e40af;}
+.alert-icon{font-size:14px;flex-shrink:0;}
+.alert-text strong{font-weight:700;}
+
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.metric-card{background:var(--surface);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow-sm);border:1px solid var(--border);display:flex;flex-direction:column;gap:3px;}
+.mc-label{font-size:10px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;}
+.mc-value{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:-.02em;}
+.mc-sub{font-size:10px;color:var(--text-dim);}
+.mc-red{border-top:3px solid var(--red);}.mc-orange{border-top:3px solid var(--amber);}.mc-green{border-top:3px solid var(--green);}
+.mc-red .mc-value{color:var(--red);}.mc-orange .mc-value{color:var(--amber);}.mc-green .mc-value{color:var(--green);}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-sm);}
+.card-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;}
+
+.audit-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
+.audit-wrap{display:flex;flex-direction:column;gap:4px;}
+.audit-wrap label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;}
+.audit-input{background:var(--bg);border:1.5px solid var(--border-mid);color:var(--navy);padding:8px 10px;border-radius:var(--r-sm);font-family:'DM Mono',monospace;font-size:15px;font-weight:700;width:100%;text-align:right;transition:border-color .15s,box-shadow .15s;}
+.audit-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12);background:white;}
+.audit-note{font-size:10px;color:var(--text-dim);}
+.bench-badge{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm);padding:7px 10px;font-size:11px;font-weight:500;color:var(--green-dark);margin-top:8px;}
+
+.br-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.br-row:last-child{border-bottom:none;}
+.br-label{color:var(--text-muted);font-weight:500;}
+.br-value{font-family:'DM Mono',monospace;font-weight:700;color:var(--red);}
+.br-row.total-row{padding-top:10px;}
+.br-row.total-row .br-label{color:var(--navy);font-weight:700;font-size:13px;}
+.br-row.total-row .br-value{font-size:15px;}
+hr.div{border:none;border-top:1px solid var(--border);margin:6px 0;}
+
+.solution-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-md);}
+.solution-instruction{padding:10px 16px;background:var(--green-bg);border-bottom:1px solid var(--green-border);font-size:12px;font-weight:600;color:var(--green-dark);display:flex;align-items:center;gap:8px;}
+.si-icon{font-size:14px;}
+
+.ba-section{display:grid;grid-template-columns:1fr auto 1fr;border-bottom:1px solid var(--border);}
+.ba-col{padding:14px 16px;display:flex;flex-direction:column;gap:7px;}
+.ba-col.before{background:var(--red-bg);}.ba-col.after{background:var(--green-bg);}
+.ba-divider{width:1px;background:var(--border);display:flex;align-items:center;justify-content:center;}
+.ba-arrow{width:24px;height:24px;background:white;border:1.5px solid var(--border-mid);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-muted);flex-shrink:0;box-shadow:var(--shadow-xs);}
+.ba-col-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px;}
+.ba-col.before .ba-col-label{color:var(--red);}.ba-col.after .ba-col-label{color:var(--green);}
+.ba-row{display:flex;justify-content:space-between;font-size:12px;gap:6px;}
+.ba-row .brl{color:var(--text-muted);flex:1;font-weight:500;}
+.ba-row .brv{font-family:'DM Mono',monospace;font-weight:700;white-space:nowrap;}
+.ba-col.before .brv{color:var(--red);}.ba-col.after .brv{color:var(--green);}
+.ba-row.highlight-row{margin-top:4px;padding-top:6px;border-top:1px solid rgba(0,0,0,.06);}
+.ba-row.highlight-row .brl{font-weight:700;color:var(--navy);}
+.ba-row.highlight-row .brv{font-size:14px;}
+
+.toggles-section{padding:0 16px;}
+.toggle-row{display:flex;flex-direction:column;padding:13px 0;border-bottom:1px solid var(--border);transition:background .15s;}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-row.hidden{display:none;}
+
+.toggle-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.toggle-info{flex:1;}
+.toggle-name{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:3px;}
+.toggle-meta{font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.toggle-rate-badge{font-size:10px;font-family:'DM Mono',monospace;font-weight:600;background:var(--green-bg);color:var(--green-dark);padding:2px 7px;border-radius:var(--r-pill);border:1px solid var(--green-border);}
+.toggle-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.toggle-impact{font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green-dark);white-space:nowrap;}
+.toggle-impact.zero{color:var(--text-dim);}
+.toggle-credibility{font-size:9px;color:var(--text-dim);text-align:right;font-weight:500;}
+
+.toggle-pitch{margin-top:10px;padding:11px 14px;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:var(--r);display:none;font-size:12px;color:var(--navy-light);line-height:1.6;}
+.toggle-pitch .pitch-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:7px;display:block;}
+.toggle-pitch em{font-style:normal;font-weight:600;color:var(--navy);}
+.toggle-pitch .objection-block{margin-top:9px;padding:8px 11px;background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:0 var(--r-sm) var(--r-sm) 0;}
+.toggle-pitch .ob-label{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-bottom:4px;display:block;}
+.toggle-pitch .ob-text{font-size:11px;color:#78350f;line-height:1.55;}
+.toggle-row.active .toggle-pitch{display:block;}
+
+.toggle-switch{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border-mid);border-radius:22px;transition:.2s;}
+.toggle-slider:before{position:absolute;content:'';height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.2s;box-shadow:var(--shadow-xs);}
+.toggle-switch input:checked + .toggle-slider{background:var(--green);}
+.toggle-switch input:checked + .toggle-slider:before{transform:translateX(18px);}
+
+.net-impact-card{background:var(--surface);border:1.5px solid var(--green-border);border-radius:var(--r-lg);padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;box-shadow:0 4px 20px rgba(16,185,129,.1);position:relative;overflow:hidden;}
+.net-impact-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--green-bg) 0%,transparent 55%);pointer-events:none;}
+.net-left{display:flex;flex-direction:column;gap:6px;position:relative;}
+.net-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;}
+.net-value{font-size:40px;font-weight:700;color:var(--green-dark);font-family:'DM Mono',monospace;line-height:1;letter-spacing:-.02em;}
+.net-breakdown{margin-top:8px;display:flex;flex-direction:column;gap:4px;}
+.nb-row{display:flex;align-items:center;gap:8px;font-size:12px;}
+.nb-label{color:var(--text-muted);flex:1;font-weight:500;}
+.nb-value{font-family:'DM Mono',monospace;font-weight:700;color:var(--green-dark);font-size:12px;}
+.nb-row.total-nb .nb-label{color:var(--navy);font-weight:700;font-size:13px;}
+.nb-row.total-nb .nb-value{font-size:14px;}
+.nb-row.wc-row .nb-value{color:var(--amber);}
+.nb-sep{height:1px;background:var(--border);margin:5px 0;}
+
+.net-right{display:flex;flex-direction:column;gap:10px;align-items:flex-end;position:relative;}
+.copy-btn{padding:11px 20px;background:var(--blue);color:white;border:none;border-radius:var(--r-pill);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(37,99,235,.35);transition:background .18s,box-shadow .18s,transform .1s;letter-spacing:.01em;}
+.copy-btn:hover{background:var(--blue-hover);box-shadow:0 4px 14px rgba(37,99,235,.45);}
+.copy-btn:active{transform:scale(.97);}
+.copy-btn.copied{background:var(--green);box-shadow:0 2px 8px rgba(16,185,129,.3);cursor:default;}
+
+.close-line{font-size:11px;color:var(--text-muted);text-align:right;max-width:220px;line-height:1.6;}
+
+.persona-card{background:var(--surface);border:1px solid var(--red-border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow-sm);}
+.persona-name{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:2px;}
+.persona-sub{font-size:11px;color:var(--text-muted);margin-bottom:10px;}
+.persona-bar{height:4px;background:var(--bg);border-radius:2px;overflow:hidden;margin-bottom:4px;}
+.persona-fill{height:100%;background:var(--red);border-radius:2px;transition:width .4s;}
+.persona-match-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);}
+.urgency-pill{display:inline-block;padding:3px 10px;border-radius:var(--r-pill);font-size:10px;font-weight:700;margin-top:8px;}
+.urgency-high{background:var(--amber-bg);color:#92400e;border:1px solid var(--amber-border);}
+.urgency-med{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid);}
+.urgency-low{background:var(--green-bg);color:var(--green-dark);border:1px solid var(--green-border);}
+
+.pscore-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.pscore-key{width:22px;font-size:10px;color:var(--text-muted);font-family:'DM Mono',monospace;font-weight:600;}
+.pscore-bar-wrap{flex:1;height:4px;background:var(--bg);border-radius:2px;overflow:hidden;}
+.pscore-bar{height:100%;border-radius:2px;transition:width .4s;}
+.pscore-val{width:26px;text-align:right;font-size:10px;font-family:'DM Mono',monospace;color:var(--text-muted);}
+.pscore-bar.p1{background:var(--red);}.pscore-bar.p4{background:#7c3aed;}.pscore-bar.p3{background:var(--blue);}
+.pscore-bar.p5{background:var(--green);}.pscore-bar.p2,.pscore-bar.p6{background:var(--border-mid);}
+
+.ref-section-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;}
+.intel-stat{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.intel-stat:last-child{border-bottom:none;}
+.is-label{color:var(--text-muted);font-weight:500;}
+.is-value{font-family:'DM Mono',monospace;font-weight:700;color:var(--blue);}
+.is-source{font-size:9px;color:var(--text-dim);font-style:italic;margin-top:1px;}
+
+.pitch-step{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.pitch-step:last-child{border-bottom:none;}
+.pitch-step-num{width:22px;height:22px;border-radius:50%;background:var(--blue-light);border:1.5px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--blue);flex-shrink:0;}
+.ps-title{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.ps-script{font-size:11px;color:var(--text-muted);line-height:1.65;font-style:italic;}
+
+.priority-item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+.priority-item:last-child{border-bottom:none;}
+.pdot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.dot-red{background:var(--red);}.dot-yellow{background:var(--amber);}.dot-green{background:var(--green);}
+.pi-title{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:2px;}
+.pi-detail{font-size:11px;color:var(--text-muted);line-height:1.5;}
+
+.source-note{font-size:9px;color:var(--text-dim);padding:6px 10px;background:var(--bg-alt);border-radius:var(--r-sm);border:1px solid var(--border);margin-top:8px;line-height:1.5;}
+.mono{font-family:'DM Mono',monospace;}.fw6{font-weight:600;}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header-left">
+    <div class="logo-mark">
+      <div class="logo-icon">
+        <svg viewBox="0 0 20 20"><path d="M10 2L2 6v4c0 4.4 3.4 8.5 8 9.3 4.6-.8 8-4.9 8-9.3V6L10 2zm0 2.4l5 2.5v3.3c0 3.1-2.2 6-5 6.9-2.8-.9-5-3.8-5-6.9V6.9L10 4.4z"/></svg>
+      </div>
+      <span class="logo-text"><span>Ship</span>way</span>
+    </div>
+    <div class="header-divider"></div>
+    <span class="header-title">RTO Intelligence</span>
+  </div>
+  <div class="header-right">
+    <span class="header-badge" id="header-context">Fashion · Shiprocket · Pan India</span>
+    <span class="version-tag">V9</span>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('main')">📞 Live Call</button>
+  <button class="tab" onclick="switchTab('ref')">📋 Reference</button>
+</div>
+
+<div class="main-layout">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="panel-section-title">Seller inputs</div>
+
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-label">Orders / month</span><span class="slider-value" id="val-orders">2,500/mo</span></div>
+      <input type="range" id="sl-orders" min="200" max="20000" step="100" value="2500" oninput="onSliderChange()">
+      <div class="slider-limits"><span>200</span><span>20,000</span></div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-label">COD percentage</span><span class="slider-value" id="val-cod">65%</span></div>
+      <input type="range" id="sl-cod" min="10" max="95" step="1" value="65" oninput="onSliderChange()">
+      <div class="slider-limits"><span>10%</span><span>95%</span></div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-label">RTO rate</span><span class="slider-value" id="val-rto">28%</span></div>
+      <input type="range" id="sl-rto" min="5" max="55" step="1" value="28" oninput="onSliderChange()">
+      <div class="slider-limits"><span>5%</span><span>55%</span></div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-label">Avg. selling price (ASP)</span><span class="slider-value" id="val-asp">₹900</span></div>
+      <input type="range" id="sl-asp" min="200" max="5000" step="50" value="900" oninput="onSliderChange()">
+      <div class="slider-limits"><span>₹200</span><span>₹5,000</span></div>
+    </div>
+
+    <div class="divider-line"></div>
+    <div class="panel-section-title">Context</div>
+
+    <div class="select-row">
+      <label>Avg. product weight</label>
+      <select id="sel-weight" onchange="onSliderChange()">
+        <option value="light">Light (&lt; 500g)</option>
+        <option value="medium" selected>Medium (500g – 1kg)</option>
+        <option value="heavy">Heavy (&gt; 1kg)</option>
+      </select>
+    </div>
+    <div class="select-row">
+      <label>Product category</label>
+      <select id="sel-cat" onchange="onSliderChange()">
+        <option value="fashion">Fashion / apparel</option>
+        <option value="electronics">Electronics</option>
+        <option value="beauty">Beauty &amp; personal care</option>
+        <option value="home">Home &amp; living</option>
+        <option value="footwear">Footwear</option>
+      </select>
+    </div>
+    <div class="select-row">
+      <label>Geography</label>
+      <select id="sel-geo" onchange="onSliderChange()">
+        <option value="tier1">Pan India — Tier 1 heavy</option>
+        <option value="tier2">Pan India — Tier 2/3 heavy</option>
+        <option value="metro">Metro only</option>
+      </select>
+    </div>
+    <div class="select-row">
+      <label>Current platform</label>
+      <select id="sel-platform" onchange="onSliderChange()">
+        <option value="shiprocket">Shiprocket</option>
+        <option value="delhivery">Delhivery direct</option>
+        <option value="bluedart">Blue Dart</option>
+        <option value="dtdc">DTDC</option>
+        <option value="other">Other aggregator</option>
+      </select>
+    </div>
+
+    <div class="select-row" style="margin-top:4px">
+      <label>COD remittance cycle (days)</label>
+      <input type="number" id="inp-remit" min="1" max="30" value="7" oninput="onSliderChange()"
+        style="width:100%;background:var(--surface);border:1px solid var(--border-mid);color:var(--navy);padding:8px 10px;border-radius:var(--r-sm);font-family:'DM Mono',monospace;font-size:14px;font-weight:700;text-align:right;">
+      <div style="font-size:10px;color:var(--text-dim);margin-top:3px">Typical: 7 days · affects COD remittance impact only</div>
+    </div>
+
+    <button class="analyse-btn" onclick="runAnalysis()">Run Analysis →</button>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- LIVE CALL TAB -->
+    <div id="tab-main" class="tab-panel active">
+
+      <div class="nav-hints">
+        <span class="nav-hint"><strong>Normal flow:</strong> 1 Hook → 2 Audit → 3 Solution → 4 Close</span>
+        <span class="nav-hint-sep">·</span>
+        <span class="nav-hint"><strong>Prospect jumps to solution?</strong> Skip to Step 3</span>
+        <span class="nav-hint-sep">·</span>
+        <span class="nav-hint"><strong>Numbers challenged?</strong> Return to Step 2</span>
+        <span class="nav-hint-sep">·</span>
+        <span class="nav-hint"><strong>CFO on call?</strong> Lead with Step 4 COD remittance</span>
+      </div>
+
+      <!-- STEP 1: HOOK -->
+      <div class="flow-step">
+        <div class="flow-step-header">
+          <div class="step-badge s1">1</div>
+          <span class="step-label s1">Hook — Lead with the freight cost, not the product</span>
+        </div>
+        <div class="opening-hook">
+          <div class="hook-left">
+            <div class="bleed-label" id="hook-context-label">Estimated monthly freight leakage</div>
+            <div class="bleed-number" id="hook-bleed">₹2.5L</div>
+            <div class="hook-context" id="hook-micro"></div>
+          </div>
+          <div class="hook-right">
+            <div class="hook-stat"><div class="hook-stat-label">Freight leakage</div><div class="hook-stat-value red" id="hs-freight">—</div></div>
+            <div class="hook-stat"><div class="hook-stat-label">RTOs / month</div><div class="hook-stat-value amber" id="hs-gp">—</div></div>
+            <div class="hook-stat"><div class="hook-stat-label">Recoverable freight</div><div class="hook-stat-value green" id="hs-rec">—</div></div>
+          </div>
+        </div>
+        <div class="say-this s1">
+          <div class="say-label">Top rep talk-track →</div>
+          <div class="bullet-cues" id="hook-script"></div>
+        </div>
+        <div class="alerts-strip" id="alerts-strip"></div>
+        <div class="metrics-grid">
+          <div class="metric-card mc-red">
+            <div class="mc-label">Freight leakage / month</div>
+            <div class="mc-value" id="m-freight">—</div>
+            <div class="mc-sub" id="m-freight-sub">—</div>
+          </div>
+          <div class="metric-card mc-orange">
+            <div class="mc-label">RTO orders / month</div>
+            <div class="mc-value" id="m-profit-risk">—</div>
+            <div class="mc-sub">orders returning every month</div>
+          </div>
+          <div class="metric-card mc-green">
+            <div class="mc-label">Freight recoverable</div>
+            <div class="mc-value" id="m-recoverable">—</div>
+            <div class="mc-sub">conservative 90-day estimate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: AUDIT -->
+      <div class="flow-step">
+        <div class="flow-step-header">
+          <div class="step-badge s2">2</div>
+          <span class="step-label s2">Audit — Validate with their actual numbers</span>
+        </div>
+        <div class="say-this s2">
+          <div class="say-label">Suggested approach →</div>
+          <em>"What are you paying for forward freight and RTO leg? I'll swap in your numbers so this reflects your P&amp;L, not defaults."</em>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Live cost validation</div>
+            <div class="audit-grid">
+              <div class="audit-wrap">
+                <label>Fwd. freight (₹)</label>
+                <input type="number" class="audit-input" id="audit-fwd" value="50" oninput="onAuditChange()">
+              </div>
+              <div class="audit-wrap">
+                <label>RTO leg (₹)</label>
+                <input type="number" class="audit-input" id="audit-rev" value="50" oninput="onAuditChange()">
+              </div>
+            </div>
+            <div class="audit-note" id="audit-note">Ask: "What's your forward freight rate and RTO leg cost?" — update live.</div>
+            <div class="bench-badge" id="audit-bench">Industry benchmark: loading...</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Freight cost — per RTO</div>
+            <div class="br-row"><span class="br-label">Forward freight</span><span class="br-value" id="bd-fwd">—</span></div>
+            <div class="br-row"><span class="br-label">RTO leg</span><span class="br-value" id="bd-rev">—</span></div>
+            <hr class="div">
+            <div class="br-row total-row"><span class="br-label">Total freight bleed / month</span><span class="br-value" id="bd-total">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: SOLUTION -->
+      <div class="flow-step">
+        <div class="flow-step-header">
+          <div class="step-badge s3">3</div>
+          <span class="step-label s3">Solution — Toggle what fits, watch the numbers update live</span>
+        </div>
+        <div class="say-this s3">
+          <div class="say-label">Strategic framing →</div>
+          <div class="bullet-cues" id="solution-script"></div>
+        </div>
+        <div class="solution-wrap">
+          <div class="solution-instruction">
+            <span class="si-icon">⚡</span>
+            <span>Toggle each solution on — the Before / After numbers update live</span>
+          </div>
+          <div class="ba-section">
+            <div class="ba-col before">
+              <div class="ba-col-label">Without Shipway — today</div>
+              <div class="ba-row"><span class="brl">RTO orders / mo</span><span class="brv" id="ba-b-rto">—</span></div>
+              <div class="ba-row"><span class="brl">Freight leakage</span><span class="brv" id="ba-b-bleed">—</span></div>
+              <div class="ba-row"><span class="brl">Orders unrecovered</span><span class="brv" id="ba-b-profit">—</span></div>
+              <div class="ba-row highlight-row"><span class="brl">Monthly freight hit</span><span class="brv" id="ba-b-total">—</span></div>
+            </div>
+            <div class="ba-divider"><div class="ba-arrow">→</div></div>
+            <div class="ba-col after">
+              <div class="ba-col-label">With Shipway — 90 days</div>
+              <div class="ba-row"><span class="brl">RTO orders / mo</span><span class="brv" id="ba-a-rto">—</span></div>
+              <div class="ba-row"><span class="brl">Freight leakage</span><span class="brv" id="ba-a-bleed">—</span></div>
+              <div class="ba-row"><span class="brl">Orders recovered</span><span class="brv" id="ba-a-profit">—</span></div>
+              <div class="ba-row highlight-row"><span class="brl">Monthly freight saved</span><span class="brv" id="ba-a-total">—</span></div>
+            </div>
+          </div>
+          <div class="toggles-section">
+
+            <div class="toggle-row" id="tr-predispatch">
+              <div class="toggle-top">
+                <div class="toggle-info">
+                  <div class="toggle-name">Pre-Dispatch Verification</div>
+                  <div class="toggle-meta">IVR / WhatsApp confirm before ship <span class="toggle-rate-badge" id="pd-rate-badge">↓ RTO 5–10%</span></div>
+                </div>
+                <div class="toggle-right">
+                  <div class="toggle-impact zero" id="ti-predispatch">—</div>
+                  <div class="toggle-credibility">freight saved · pre-dispatch reduction</div>
+                  <label class="toggle-switch"><input type="checkbox" id="tog-predispatch" onchange="onToggleChange()"><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="toggle-pitch" id="tp-predispatch"></div>
+            </div>
+
+            <div class="toggle-row" id="tr-ndr">
+              <div class="toggle-top">
+                <div class="toggle-info">
+                  <div class="toggle-name">Automated NDR Recovery</div>
+                  <div class="toggle-meta">WhatsApp reattempt flows on failed deliveries <span class="toggle-rate-badge" id="ndr-rate-badge">5–9% recovery opportunity</span></div>
+                </div>
+                <div class="toggle-right">
+                  <div class="toggle-impact zero" id="ti-ndr">—</div>
+                  <div class="toggle-credibility">freight recovery opportunity · NDR</div>
+                  <label class="toggle-switch"><input type="checkbox" id="tog-ndr" onchange="onToggleChange()"><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="toggle-pitch" id="tp-ndr"></div>
+            </div>
+
+            <div class="toggle-row hidden" id="tr-calling">
+              <div class="toggle-top">
+                <div class="toggle-info">
+                  <div class="toggle-name">Manual Calling (High-ASP)</div>
+                  <div class="toggle-meta">Agent-led calls on high-value failed deliveries <span class="toggle-rate-badge" id="call-rate-badge">2–5% recovery opportunity</span></div>
+                </div>
+                <div class="toggle-right">
+                  <div class="toggle-impact zero" id="ti-calling">—</div>
+                  <div class="toggle-credibility">orders recovered · agent follow-up</div>
+                  <label class="toggle-switch"><input type="checkbox" id="tog-calling" onchange="onToggleChange()"><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="toggle-pitch" id="tp-calling"></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: CLOSE -->
+      <div class="flow-step">
+        <div class="flow-step-header">
+          <div class="step-badge s4">4</div>
+          <span class="step-label s4">Close — Projected freight impact + send summary</span>
+        </div>
+        <div class="net-impact-card">
+          <div class="net-left">
+            <div class="net-label">Projected monthly freight recovery</div>
+            <div class="net-value" id="net-impact">+₹0</div>
+            <div class="net-breakdown">
+              <div class="nb-row"><span class="nb-label">Freight cost saved (pre-dispatch)</span><span class="nb-value" id="nb-cost">₹0</span></div>
+              <div class="nb-row"><span class="nb-label">Freight recovered (NDR / calling)</span><span class="nb-value" id="nb-profit">₹0</span></div>
+              <div class="nb-sep"></div>
+              <div class="nb-row total-nb"><span class="nb-label">Total freight impact</span><span class="nb-value" id="nb-total">₹0</span></div>
+              <div class="nb-sep"></div>
+              <div class="nb-row wc-row"><span class="nb-label">COD remittance impact</span><span class="nb-value" id="nb-wc">₹0</span></div>
+            </div>
+          </div>
+          <div class="net-right">
+            <button class="copy-btn" id="copy-btn" onclick="copySummary()">📋 Copy for Zoom</button>
+            <div class="close-line" id="close-line"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PERSONA -->
+      <div class="two-col">
+        <div class="persona-card">
+          <div class="panel-section-title" style="margin-bottom:6px">Buyer persona</div>
+          <div class="persona-name" id="persona-name">⟳ RTO Bleeder</div>
+          <div class="persona-sub" id="persona-sub">High-volume COD brand</div>
+          <div class="persona-bar"><div class="persona-fill" id="persona-fill" style="width:66%"></div></div>
+          <div class="persona-match-label"><span>Match score</span><span id="persona-pct">66%</span></div>
+          <span class="urgency-pill urgency-high" id="urgency-pill">High urgency</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Persona score breakdown</div>
+          <div class="pscore-row"><span class="pscore-key">P1</span><div class="pscore-bar-wrap"><div class="pscore-bar p1" id="ps-p1" style="width:100%"></div></div><span class="pscore-val" id="pv-p1">100</span></div>
+          <div class="pscore-row"><span class="pscore-key">P4</span><div class="pscore-bar-wrap"><div class="pscore-bar p4" id="ps-p4" style="width:72%"></div></div><span class="pscore-val" id="pv-p4">72</span></div>
+          <div class="pscore-row"><span class="pscore-key">P3</span><div class="pscore-bar-wrap"><div class="pscore-bar p3" id="ps-p3" style="width:38%"></div></div><span class="pscore-val" id="pv-p3">38</span></div>
+          <div class="pscore-row"><span class="pscore-key">P5</span><div class="pscore-bar-wrap"><div class="pscore-bar p5" id="ps-p5" style="width:34%"></div></div><span class="pscore-val" id="pv-p5">34</span></div>
+          <div class="pscore-row"><span class="pscore-key">P2</span><div class="pscore-bar-wrap"><div class="pscore-bar p2" id="ps-p2" style="width:0%"></div></div><span class="pscore-val" id="pv-p2">0</span></div>
+          <div class="pscore-row"><span class="pscore-key">P6</span><div class="pscore-bar-wrap"><div class="pscore-bar p6" id="ps-p6" style="width:0%"></div></div><span class="pscore-val" id="pv-p6">0</span></div>
+        </div>
+      </div>
+
+    </div><!-- /tab-main -->
+
+    <!-- REFERENCE TAB -->
+    <div id="tab-ref" class="tab-panel">
+      <div class="two-col">
+        <div class="card"><div class="ref-section-title">Priority actions — this account</div><div id="priority-items"></div></div>
+        <div class="card"><div class="ref-section-title">Industry benchmarks</div><div id="intel-benchmarks"></div></div>
+      </div>
+      <div class="card"><div class="ref-section-title">Full call script</div><div id="pitch-steps"></div></div>
+    </div>
+
+  </div><!-- /right-panel -->
+</div><!-- /main-layout -->
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE — packaging removed, margin removed
+// Default freight: fwd=50, rev=50
+// ═══════════════════════════════════════════════
+const S = {
+  orders:2500, cod:65, rto:28, asp:900,
+  weight:'medium', cat:'fashion', geo:'tier1', platform:'shiprocket',
+  fwd:50, rev:50, remit:7,
+  tPredispatch:false, tNdr:false, tCalling:false,
+};
+
+// Weight defaults updated: fwd=50, rev=50 for medium
+const WEIGHT_DEFAULTS = {
+  light:  {fwd:40, rev:40},
+  medium: {fwd:50, rev:50},
+  heavy:  {fwd:65, rev:65},
+};
+
+// ─────────────────────────────────────────────
+// CATEGORY DATA — recalibrated
+// Sources:
+//   Unicommerce E-commerce Index Report H1 2024 (operational RTO disclosures)
+//   Delhivery Annual Report FY24 (category RTO commentary, NDA-level opex disclosures)
+//   CRISIL Logistics Sector Report 2023 (D2C RTO ranges)
+//   Shipway internal directional ranges (conservative, cross-validated)
+// Range = COD-heavy D2C pan-India; lower end = Tier 1 / metro + prepaid mix
+// Benchmark = directional median for COD-heavy pan-India (Tier 2/3 weighted)
+// ─────────────────────────────────────────────
+const CAT_DATA = {
+  // rtoRange = full observed pan-India COD range (for context)
+  // liveRange = tighter range to use in live-call benchmarking
+  // benchmark = directional median, COD-heavy pan-India, Tier 2/3 weighted
+  fashion:     {label:'Fashion / Apparel',      rtoRange:'20–35%', liveRange:'20–30%', benchmark:26, geoAdj:{tier1:-3,tier2:3,metro:-4}, source:'Unicommerce H1 2024 / CRISIL 2023'},
+  electronics: {label:'Electronics',            rtoRange:'8–18%',  liveRange:'9–16%',  benchmark:12, geoAdj:{tier1:-2,tier2:3,metro:-3}, source:'Delhivery FY24 / Unicommerce H1 2024'},
+  beauty:      {label:'Beauty & Personal Care', rtoRange:'10–22%', liveRange:'12–20%', benchmark:16, geoAdj:{tier1:-2,tier2:3,metro:-3}, source:'Unicommerce H1 2024'},
+  home:        {label:'Home & Living',          rtoRange:'10–20%', liveRange:'11–18%', benchmark:14, geoAdj:{tier1:-2,tier2:2,metro:-3}, source:'Unicommerce H1 2024'},
+  footwear:    {label:'Footwear',               rtoRange:'18–33%', liveRange:'20–30%', benchmark:24, geoAdj:{tier1:-3,tier2:4,metro:-5}, source:'Unicommerce H1 2024 / CRISIL 2023'},
+};
+
+// ─────────────────────────────────────────────
+// PLATFORM DATA
+// Objection responses: 1–2 lines max, keyword-led
+// Shiprocket: comparable on tech + pricing → lead with operational ownership
+// Other aggregators: scale-first positioning
+// ─────────────────────────────────────────────
+const PLATFORM_DATA = {
+  shiprocket: {
+    name: 'Shiprocket',
+    pdPitchBullets: [
+      `On Shiprocket, orders ship the moment they're manifested — no pre-dispatch gate by default.`,
+      `Shipway adds IVR or WhatsApp confirmation before dispatch. <em>Low-intent and fake COD orders are filtered before you spend a rupee on freight.</em>`,
+      `Typical RTO reduction: 8–15% within the first 2 weeks. Freight savings start immediately.`,
+    ],
+    pdPitch: `On Shiprocket, orders ship the moment they're manifested. Shipway adds a pre-dispatch confirmation gate — fake and low-intent orders are filtered before the courier is ever booked.`,
+    ndrPitchBullets: [
+      `On Shiprocket, NDR goes through the courier — Delhivery or Ekart decides if and when to retry. You have no visibility or control.`,
+      `Shipway gives you <em>seller-controlled WhatsApp reattempts</em> — you own the timing, the message, and the outcome.`,
+      `Courier retries because their SLA says so. <em>Shipway retries because your customer confirmed.</em>`,
+    ],
+    ndrPitch: `On Shiprocket, NDR goes through the courier — you have no seller-side control. Shipway adds direct seller-controlled WhatsApp reattempts. The courier retries because their SLA says so. Shipway retries because your customer confirmed.`,
+    // SHORT objection — 1–2 lines, keyword-led
+    ndrObjection: `Comparable on workflow and pricing. Where Shipway differs: dedicated KAM, weekly reviews, real-time WhatsApp/call escalation — not a ticket queue.`,
+    aggregatorObjection: `Broadly comparable on tech and pricing. Shipway wins on: dedicated KAM ownership · weekly operational reviews · real-time escalation · faster resolution. That's where the outcome difference shows up.`,
+  },
+  delhivery: {
+    name: 'Delhivery',
+    pdPitchBullets: [
+      `Delhivery doesn't offer pre-dispatch verification — orders leave as soon as they're manifested.`,
+      `Shipway adds a WhatsApp or IVR confirmation gate. <em>Low-intent and fake orders are filtered before you ship.</em>`,
+      `You keep the Delhivery rate. You stop paying freight on orders that were never going to be accepted.`,
+    ],
+    pdPitch: `Delhivery has no pre-dispatch gate. Shipway adds WhatsApp or IVR confirmation before dispatch, filtering fake and low-intent orders before you've spent a rupee on freight.`,
+    ndrPitchBullets: [
+      `Delhivery gives you good network depth — but <em>zero seller-side control on failed deliveries.</em>`,
+      `Their NDR is a courier workflow. You see the status update. You can't influence the retry.`,
+      `Shipway intercepts every failed delivery and runs a direct WhatsApp reattempt before the courier marks it RTO.`,
+    ],
+    ndrPitch: `Delhivery's NDR is a courier workflow — you have no control or visibility. Shipway intercepts every failed delivery and runs a direct WhatsApp reattempt before the courier marks it RTO.`,
+    ndrObjection: `No single courier delivers equally across all pincodes. Shipway routes each order to the best-performing courier on that lane — then scale (10,000+ brands) unlocks better rates and faster escalation on top.`,
+    aggregatorObjection: `Pincode-level routing first: Delhivery is strong on major lanes, weaker on tail pincodes. Shipway allocates by actual delivery performance per zone. Then 10,000+ brand scale improves rates, support, and escalation speed.`,
+  },
+  bluedart: {
+    name: 'Blue Dart',
+    pdPitchBullets: [
+      `Blue Dart doesn't flag order intent before pickup — no pre-dispatch gate built in.`,
+      `Shipway adds IVR or WhatsApp confirmation before a Blue Dart pickup is scheduled.`,
+      `<em>Fake and low-intent COD orders are caught before Blue Dart ever touches the parcel.</em>`,
+    ],
+    pdPitch: `Blue Dart has no pre-dispatch gate. Shipway adds a confirmation step — fake and low-intent orders are caught before a pickup is scheduled.`,
+    ndrPitchBullets: [
+      `Blue Dart is strong on delivery reliability. On NDR, you get a status update — that's it. <em>No seller-side control.</em>`,
+      `Shipway intercepts every failed delivery and runs a direct WhatsApp reattempt — you control timing and outcome.`,
+      `Every failed delivery gets a seller-controlled response before it becomes a return.`,
+    ],
+    ndrPitch: `Blue Dart's NDR process is internal — you get an SMS and that's it. Shipway intercepts every failed delivery and gives you seller-controlled WhatsApp reattempts before it turns into a return.`,
+    ndrObjection: `Blue Dart is strong on metro and Tier 1 — serviceability gaps appear on Tier 2/3 and tail pincodes. Shipway fills those gaps by routing to the best-performing courier per zone, not just the preferred one.`,
+    aggregatorObjection: `Single courier = pincode coverage and performance risk. Shipway routes by actual delivery performance per pincode. Blue Dart remains in the mix where it leads — but you're no longer dependent on one carrier across all zones.`,
+  },
+  dtdc: {
+    name: 'DTDC',
+    pdPitchBullets: [
+      `DTDC pickups happen fast — no natural pre-dispatch gate.`,
+      `Shipway adds a verification step so bad orders are filtered <em>before a DTDC pickup is booked.</em>`,
+      `You stop paying freight and RTO leg costs on orders that were fake or low-intent from the start.`,
+    ],
+    pdPitch: `DTDC pickups happen fast — no pre-dispatch gate. Shipway adds verification before a pickup is booked, filtering fake and low-intent orders before they ship.`,
+    ndrPitchBullets: [
+      `DTDC's NDR process is manual and <em>franchise-dependent</em> — follow-up quality varies by hub.`,
+      `Shipway standardises that with a direct WhatsApp reattempt — no dependency on which DTDC franchise handles your pincode.`,
+      `Consistent customer outreach, every failed delivery, every location.`,
+    ],
+    ndrPitch: `DTDC's NDR is manual and franchise-dependent — quality varies by hub. Shipway standardises with direct WhatsApp reattempts, independent of which franchise handles your pincode.`,
+    ndrObjection: `DTDC's franchise model means delivery performance varies by hub — same pincode, different outcome depending on the franchise. Shipway routes around that by allocating to the courier with the best actual delivery rate on that lane.`,
+    aggregatorObjection: `Franchise dependency = pincode-level performance variance. Shipway routes each order to the best-performing courier per pincode — removing the hub lottery. Scale (10,000+ brands) then improves rates and escalation on top.`,
+  },
+  other: {
+    name: 'your current platform',
+    pdPitchBullets: [
+      `Most logistics platforms don't offer a pre-dispatch intent signal — orders ship as soon as they're processed.`,
+      `Shipway adds IVR or WhatsApp confirmation before dispatch. <em>Low-intent and fake orders are filtered before you spend a rupee on freight.</em>`,
+      `Simplest way to reduce RTO: catch bad orders before they ship.`,
+    ],
+    pdPitch: `Most platforms ship orders as soon as they're processed. Shipway adds a pre-dispatch confirmation step — fake and low-intent orders filtered before freight is spent.`,
+    ndrPitchBullets: [
+      `Most aggregators handle NDR at the courier level — retry once or twice, then mark RTO.`,
+      `<em>Shipway gives you seller-side control:</em> intercept every failed delivery and run a direct WhatsApp reattempt with the customer.`,
+      `Courier NDR is passive. Shipway NDR is active.`,
+    ],
+    ndrPitch: `Most aggregators do courier-level NDR — retry twice per SLA, mark RTO. Shipway gives you seller-side control: direct WhatsApp reattempt with the customer before the courier gives up.`,
+    // Scale-first for other aggregators
+    ndrObjection: `Scale advantage: 10,000+ brands, 10+ couriers → stronger courier leverage, better pattern recognition, faster escalation. Most aggregators process shipments. Shipway improves outcomes.`,
+    aggregatorObjection: `Scale: 10,000+ brands → stronger courier leverage · better commercial terms · faster issue resolution · proven across more failure patterns. Platform-level tech is comparable. Outcomes aren't.`,
+  },
+};
+
+// ═══════════════════════════════════════════════
+// RATES — recalibrated, conservative live-call ranges
+//
+// Pre-dispatch RTO reduction:
+//   Live-call range: 5–10% standard; 8–12% high-COD + high-RTO only
+//   Basis: Directional operational range from Shipway network data (conservative);
+//   Unicommerce H1 2024 notes pre-shipment confirmation as an RTO lever
+//   but does not cite specific reduction percentages.
+//   10%+ ceiling only applies: COD >60% + RTO >28% + Tier 2/3
+//   Rep framing: "5–10% is what we typically see in the first month"
+//
+// NDR automation recovery:
+//   Live-call range: 5–9% standard; 7–11% high-RTO only
+//   Basis: Delhivery FY24 Annual Report cites NDR-to-delivery conversion
+//   in the 6–10% range for automated follow-up flows (directional disclosure).
+//   Upper end requires: active WhatsApp flows + RTO >28% + Tier 2/3 density
+//   Rep framing: "6–8% is the conservative range we see across our network"
+//
+// Manual calling recovery:
+//   Live-call range: 2–5% of NDR orders (high-ASP only, ₹1,000+)
+//   Basis: Conservative internal directional range; agent economics
+//   only justify above ₹1,000 ASP. Safe to defend live.
+// ═══════════════════════════════════════════════
+function getRates() {
+  const {rto, cod, geo} = S;
+  const cat = CAT_DATA[S.cat];
+
+  // Geo-adjusted benchmark
+  const geoBenchmark = cat.benchmark + (cat.geoAdj[geo] || 0);
+
+  // Pre-dispatch: 5–10% standard; ceiling hard-capped at 12% (high-COD + high-RTO + tier2 only)
+  let pdLo = 5, pdHi = 10;
+  if (rto > 28 && cod > 60 && geo === 'tier2') { pdLo = 7; pdHi = 12; }
+  else if (rto > 28 && cod > 60)               { pdLo = 6; pdHi = 11; }
+  else if (rto < 15 || cod < 30)               { pdLo = 3; pdHi = 7;  }
+  const pdMid = (pdLo + pdHi) / 2 / 100;
+
+  // NDR: 5–9% standard (Delhivery FY24 directional); ceiling hard-capped at 11%
+  let ndrLo = 5, ndrHi = 9;
+  if (rto > 28 && geo === 'tier2') { ndrLo = 6; ndrHi = 11; }
+  else if (rto > 28)               { ndrLo = 6; ndrHi = 10; }
+  else if (rto < 12)               { ndrLo = 3; ndrHi = 7;  }
+  const ndrMid = (ndrLo + ndrHi) / 2 / 100;
+
+  // Manual calling: conservative, high-ASP only
+  const callLo = 2, callHi = 5;
+  const callMid = (callLo + callHi) / 2 / 100;
+
+  return { pdLo, pdHi, pdMid, ndrLo, ndrHi, ndrMid, callLo, callHi, callMid, geoBenchmark };
+}
+
+// ═══════════════════════════════════════════════
+// CALCULATIONS
+// Freight-only: fwd + rto leg, no packaging, no margin
+// COD remittance impact: simple COD float estimate (seller-input remit cycle)
+// ═══════════════════════════════════════════════
+function calc() {
+  const {orders, cod, rto, asp, fwd, rev, remit} = S;
+  const r = getRates();
+
+  const rtoOrders  = Math.round(orders * (rto / 100));
+  const costPerRTO = fwd + rev;
+  const totalBleed = rtoOrders * costPerRTO;
+  const fwdLoss    = rtoOrders * fwd;
+  const rtoLegLoss = rtoOrders * rev;
+
+  const codOrders    = Math.round(orders * (cod / 100));
+  // COD remittance impact: cash blocked in remittance cycle at any point
+  // Formula: (COD orders/mo × ASP) × (remit days / 30)
+  const codRemittance = codOrders * asp * (remit / 30);
+
+  // Pre-dispatch: reduces RTO orders → saves freight cost
+  const pdRTOreduction = Math.round(rtoOrders * r.pdMid);
+  const preDispSaved   = pdRTOreduction * costPerRTO;
+
+  // NDR: recovers some RTO → saves RTO leg cost on those orders
+  const ndrOrders   = Math.round(rtoOrders * r.ndrMid);
+  const ndrSaved    = ndrOrders * rev;
+
+  // Manual calling: additional NDR recovery on high-ASP
+  const callOrders = asp > 1000 ? Math.round(rtoOrders * r.callMid) : 0;
+  const callSaved  = callOrders * rev;
+
+  // Totals from active toggles
+  let freightSaved    = 0;
+  let freightRecovered = 0;
+  if (S.tPredispatch) freightSaved     += preDispSaved;
+  if (S.tNdr)         freightRecovered += ndrSaved;
+  if (S.tCalling)     freightRecovered += callSaved;
+  const netFreightImpact = freightSaved + freightRecovered;
+
+  // After-state
+  const rtoReduction   = (S.tPredispatch ? r.pdMid : 0) + (S.tNdr ? r.ndrMid : 0) + (S.tCalling ? r.callMid : 0);
+  const afterRTOorders = Math.round(rtoOrders * (1 - Math.min(rtoReduction, 0.45)));
+  const afterBleed     = afterRTOorders * costPerRTO;
+
+  // Conservative recoverable estimate (for hook)
+  const recoverableEst = (preDispSaved + ndrSaved) * 0.65;
+
+  return {
+    rtoOrders, costPerRTO, totalBleed, fwdLoss, rtoLegLoss,
+    codOrders, codRemittance,
+    pdRTOreduction, preDispSaved,
+    ndrOrders, ndrSaved,
+    callOrders, callSaved,
+    freightSaved, freightRecovered, netFreightImpact,
+    afterRTOorders, afterBleed,
+    recoverableEst, r,
+  };
+}
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function fmt(n) {
+  if (n >= 100000) return '₹' + (n / 100000).toFixed(1) + 'L';
+  if (n >= 1000)   return '₹' + Math.round(n / 1000) + 'K';
+  return '₹' + Math.round(n);
+}
+const el  = id => document.getElementById(id);
+const txt = (id, v) => { const e = el(id); if (e) e.textContent = v; };
+const htm = (id, v) => { const e = el(id); if (e) e.innerHTML = v; };
+function bullets(arr) {
+  return arr.map(b =>
+    `<div class="bullet-cue"><span class="bc-dot">•</span><span>${b}</span></div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+function render() {
+  const c   = calc();
+  const cat = CAT_DATA[S.cat];
+  const plt = PLATFORM_DATA[S.platform];
+  const {orders, cod, rto, asp, fwd, rev} = S;
+  const geoLabels = {tier1:'Pan India · Tier 1', tier2:'Pan India · Tier 2/3', metro:'Metro'};
+  const wLabels   = {light:'<500g items', medium:'500g–1kg items', heavy:'>1kg items'};
+
+  txt('header-context', `${cat.label} · ${plt.name} · ${geoLabels[S.geo]}`);
+  txt('val-orders', Number(orders).toLocaleString('en-IN') + '/mo');
+  txt('val-cod',    cod + '%');
+  txt('val-rto',    rto + '%');
+  txt('val-asp',    '₹' + asp);
+
+  // ── STEP 1: HOOK ──────────────────────────
+  txt('hook-bleed', fmt(c.totalBleed));
+  txt('hook-context-label', `Estimated monthly freight leakage — ${cat.label} brand`);
+  htm('hook-micro',
+    `Based on <strong>${Number(orders).toLocaleString('en-IN')} orders/mo</strong>, ${rto}% RTO, ` +
+    `shipping <strong>${wLabels[S.weight]}</strong> — <strong>${geoLabels[S.geo]}</strong>. ` +
+    `${cat.label} typical RTO: ${cat.liveRange}.`
+  );
+
+  txt('hs-freight', fmt(c.totalBleed));
+  txt('hs-gp',      c.rtoOrders.toLocaleString('en-IN'));
+  txt('hs-rec',     fmt(c.recoverableEst));
+
+  const aboveBench = rto > c.r.geoBenchmark;
+  const pltHookLine = S.platform === 'shiprocket'
+    ? `You're on Shiprocket — good base for shipment processing. Let me show you what RTO is actually costing you in freight right now.`
+    : ['delhivery','dtdc','other'].includes(S.platform)
+    ? `Before we talk solutions — let me show you what the current freight leakage looks like in rupees at your volume.`
+    : `Let me show you what RTO freight leakage looks like at your volume.`;
+
+  el('hook-script').innerHTML = bullets([
+    pltHookLine,
+    `<em>${Number(orders).toLocaleString('en-IN')} orders, ${rto}% RTO</em> — that's <em>${c.rtoOrders.toLocaleString('en-IN')} RTOs every month</em>.`,
+    `Each returned order costs you <em>${fmt(c.costPerRTO)}</em> in dead freight: ₹${fwd} forward + ₹${rev} RTO leg. You're spending <em>${fmt(c.totalBleed)}</em> every month for zero revenue.`,
+    aboveBench
+      ? `${cat.label} typically runs ${cat.liveRange} for COD-heavy brands — you're above that. There's meaningful freight to recover.`
+      : `You're within the typical ${cat.label} range of ${cat.liveRange}. NDR automation is your fastest freight recovery.`,
+    `<em>Does the ${fmt(c.totalBleed)} freight number feel roughly right?</em>`,
+  ]);
+
+  renderAlerts(c);
+
+  txt('m-freight',     fmt(c.totalBleed));
+  txt('m-freight-sub', fmt(c.costPerRTO) + ' per returned order');
+  txt('m-profit-risk', c.rtoOrders.toLocaleString('en-IN'));
+  txt('m-recoverable', fmt(c.recoverableEst));
+
+  // ── STEP 2: AUDIT ──────────────────────────
+  el('audit-note').textContent = `${wLabels[S.weight]} defaults (₹${fwd} fwd / ₹${rev} RTO leg). Update with prospect's actual rates.`;
+  txt('audit-bench', `${cat.label} typical RTO: ${cat.liveRange} · Geo-adjusted median: ~${c.r.geoBenchmark}% · Source: ${cat.source} · Yours: ${rto}%`);
+  txt('bd-fwd',   fmt(c.fwdLoss));
+  txt('bd-rev',   fmt(c.rtoLegLoss));
+  txt('bd-total', fmt(c.totalBleed));
+
+  // ── STEP 3: SOLUTION ──────────────────────
+  txt('ba-b-rto',    c.rtoOrders.toLocaleString('en-IN') + '/mo');
+  txt('ba-b-bleed',  fmt(c.totalBleed));
+  txt('ba-b-profit', c.rtoOrders.toLocaleString('en-IN') + ' unrecovered');
+  txt('ba-b-total',  '−' + fmt(c.totalBleed));
+
+  txt('ba-a-rto',    c.afterRTOorders.toLocaleString('en-IN') + '/mo');
+  txt('ba-a-bleed',  fmt(c.afterBleed));
+  txt('ba-a-profit', c.freightRecovered > 0 ? '+' + fmt(c.freightRecovered) + ' recovered' : '—');
+  const afterTotal = c.freightSaved + c.freightRecovered;
+  txt('ba-a-total',  afterTotal > 0 ? '+' + fmt(afterTotal) : '—');
+
+  // Solution script — platform-aware
+  const isShiprocket = S.platform === 'shiprocket';
+  const isOtherAgg   = ['other','delhivery','dtdc'].includes(S.platform);
+  const isSingleCourier = ['bluedart'].includes(S.platform);
+
+  let solBullets;
+  if (isShiprocket) {
+    solBullets = [
+      `Shiprocket is comparable on workflow automation and pricing. <em>That's not where we're competing.</em>`,
+      `Where Shipway wins: <em>dedicated KAM ownership, real-time WhatsApp/call support, weekly operational reviews, faster courier escalation.</em>`,
+      `The automation layer processes shipments. The human layer improves outcomes.`,
+    ];
+  } else if (isOtherAgg) {
+    solBullets = [
+      `The platform layer is broadly comparable across aggregators. <em>What changes outcomes is scale.</em>`,
+      `Shipway: <em>10,000+ brands, 10+ courier partners</em> → stronger courier leverage, better commercial terms, pattern recognition across more failure types than any single-brand account can get.`,
+      `Most aggregators process shipments. <em>Shipway improves delivery outcomes.</em>`,
+    ];
+  } else {
+    solBullets = [
+      `Single-courier setup means concentration risk — <em>if that courier underperforms on a pincode cluster, you absorb it fully.</em>`,
+      `Shipway aggregates 10+ couriers and routes each order to the best performer per pincode — not cheapest, <em>most likely to deliver.</em>`,
+      `10,000+ brand network means better commercial leverage, faster escalation, and pattern recognition you can't get on a direct account.`,
+    ];
+  }
+  el('solution-script').innerHTML = bullets(solBullets);
+
+  txt('pd-rate-badge',   `↓ RTO ${c.r.pdLo}–${c.r.pdHi}% · conservative benchmark`);
+  txt('ndr-rate-badge',  `${c.r.ndrLo}–${c.r.ndrHi}% recovery opportunity`);
+  txt('call-rate-badge', `${c.r.callLo}–${c.r.callHi}% recovery opportunity`);
+
+  el('tr-predispatch').classList.toggle('hidden', cod < 30);
+  el('tr-calling').classList.toggle('hidden', asp <= 1000);
+
+  // Pre-Dispatch toggle
+  const tiPD = el('ti-predispatch');
+  tiPD.textContent = '+' + fmt(c.preDispSaved) + '/mo';
+  tiPD.className   = 'toggle-impact' + (S.tPredispatch ? '' : ' zero');
+  el('tr-predispatch').classList.toggle('active', S.tPredispatch);
+  htm('tp-predispatch',
+    `<span class="pitch-label">Why this works →</span>` +
+    `<div class="bullet-cues" style="margin-bottom:8px">` +
+      bullets([
+        plt.pdPitchBullets[0],
+        plt.pdPitchBullets[1],
+        plt.pdPitchBullets[2],
+      ]) +
+    `</div>` +
+    `<div class="objection-block">` +
+      `<span class="ob-label">If they say "won't this hurt conversions?" →</span>` +
+      `<span class="ob-text">These orders were never going to convert — they were always going to return. Your conversion rate stays the same. Your freight cost drops.</span>` +
+    `</div>` +
+    (isShiprocket
+      ? `<div class="objection-block" style="margin-top:8px">` +
+          `<span class="ob-label">If they say "Shiprocket has this too" →</span>` +
+          `<span class="ob-text">${plt.aggregatorObjection}</span>` +
+        `</div>`
+      : '') +
+    `<div style="font-size:10px;color:var(--text-dim);margin-top:8px">Benchmark for ${cat.label}: ${c.r.pdLo}–${c.r.pdHi}% RTO reduction · Conservative operational benchmark · Actual results vary by COD mix and order profile</div>`
+  );
+
+  // NDR toggle
+  const tiNDR = el('ti-ndr');
+  tiNDR.textContent = '+' + fmt(c.ndrSaved) + '/mo';
+  tiNDR.className   = 'toggle-impact' + (S.tNdr ? '' : ' zero');
+  el('tr-ndr').classList.toggle('active', S.tNdr);
+  htm('tp-ndr',
+    `<span class="pitch-label">Why this works →</span>` +
+    `<div class="bullet-cues" style="margin-bottom:8px">` +
+      bullets([
+        plt.ndrPitchBullets[0],
+        plt.ndrPitchBullets[1],
+        `Recovering ~${Math.round(c.r.ndrMid*100)}% of your ${c.rtoOrders.toLocaleString()} RTOs = <em>${c.ndrOrders.toLocaleString()} orders × ₹${rev} RTO leg saved</em> = ${fmt(c.ndrSaved)}/month.`,
+      ]) +
+    `</div>` +
+    `<div class="objection-block">` +
+      `<span class="ob-label">If they push back →</span>` +
+      `<span class="ob-text">${plt.ndrObjection}</span>` +
+    `</div>` +
+    `<div style="font-size:10px;color:var(--text-dim);margin-top:8px">NDR recovery opportunity: ${c.r.ndrLo}–${c.r.ndrHi}% of RTO orders · Delhivery FY24 operational commentary references NDR conversion in the 6–10% range for automated flows (directional). Upper range applies only at high RTO + Tier 2/3 density.</div>`
+  );
+
+  // Manual calling toggle
+  const tiCall = el('ti-calling');
+  tiCall.textContent = '+' + fmt(c.callSaved) + '/mo';
+  tiCall.className   = 'toggle-impact' + (S.tCalling ? '' : ' zero');
+  el('tr-calling').classList.toggle('active', S.tCalling);
+  htm('tp-calling',
+    `<span class="pitch-label">Why this works →</span>` +
+    `<div class="bullet-cues" style="margin-bottom:8px">` +
+      bullets([
+        `At ₹${asp} ASP, the cost of a lost delivery is high. Agent-led calling on your highest-value NDRs recovers orders before the courier marks RTO.`,
+        `${c.r.callLo}–${c.r.callHi}% recovery on those NDRs = <em>${c.callOrders.toLocaleString()} orders × ₹${rev} RTO leg saved</em> = ${fmt(c.callSaved)}/month.`,
+        `Applies to high-ASP brands (₹1,000+) where the freight recovery per order justifies the agent cost.`,
+      ]) +
+    `</div>` +
+    `<div style="font-size:10px;color:var(--text-dim);margin-top:8px">Recovery opportunity: ${c.r.callLo}–${c.r.callHi}% of NDR orders · high-ASP D2C segment · conservative operational benchmark</div>`
+  );
+
+  // ── STEP 4: CLOSE ──────────────────────────
+  txt('net-impact', c.netFreightImpact > 0 ? '+' + fmt(c.netFreightImpact) : '+₹0');
+  txt('nb-cost',   fmt(c.freightSaved));
+  txt('nb-profit', fmt(c.freightRecovered));
+  txt('nb-total',  fmt(c.netFreightImpact));
+  txt('nb-wc',     fmt(c.codRemittance));
+
+  const closeImpact = c.netFreightImpact > 0 ? fmt(c.netFreightImpact) : fmt(c.totalBleed * 0.15);
+  el('close-line').innerHTML =
+    `<div class="bullet-cue" style="justify-content:flex-end;margin-bottom:3px">` +
+      `<span class="bc-dot">·</span><span><strong>${closeImpact}/month</strong> freight recovered.</span>` +
+    `</div>` +
+    `<div class="bullet-cue" style="justify-content:flex-end;margin-bottom:3px">` +
+      `<span class="bc-dot">·</span><span>COD remittance impact: <strong>${fmt(c.codRemittance)}</strong> in cycle.</span>` +
+    `</div>` +
+    `<div class="bullet-cue" style="justify-content:flex-end;margin-bottom:3px">` +
+      `<span class="bc-dot">·</span><span>Dedicated KAM · WhatsApp/call · Weekly reviews.</span>` +
+    `</div>` +
+    `<div class="bullet-cue" style="justify-content:flex-end">` +
+      `<span class="bc-dot">·</span><span>Zero stack changes. Live in 7 days.</span>` +
+    `</div>`;
+
+  renderPersona(c);
+  renderPriority(c);
+  renderIntel(c);
+  renderPitch(c);
+}
+
+// ═══════════════════════════════════════════════
+// ALERTS
+// ═══════════════════════════════════════════════
+function renderAlerts(c) {
+  const {rto, cod, asp, orders, platform} = S;
+  const cat = CAT_DATA[S.cat];
+  const plt = PLATFORM_DATA[platform];
+  const alerts = [];
+
+  if (rto > c.r.geoBenchmark + 5)
+    alerts.push({type:'alert-red', icon:'🔴', text:`<strong>RTO is ${rto - c.r.geoBenchmark}pts above ${cat.label} benchmark for ${S.geo === 'tier2' ? 'Tier 2/3' : S.geo === 'metro' ? 'metro' : 'Tier 1'}</strong> (typical: ${cat.liveRange}). Freight bleed = ${fmt(c.totalBleed)}/mo. Strongest lever in this conversation.`});
+
+  if (cod > 65)
+    alerts.push({type:'alert-yellow', icon:'⚠️', text:`<strong>High COD concentration:</strong> ${Math.round(orders*cod/100).toLocaleString('en-IN')} COD orders/mo. Fake order freight risk is high — Pre-Dispatch has highest ROI here.`});
+
+  if (asp > 2500)
+    alerts.push({type:'alert-green', icon:'💎', text:`<strong>High ASP:</strong> Each recovered order saves ₹${S.rev} in RTO leg. Manual Calling ROI is strong — activate that toggle.`});
+
+  if (rto < 10)
+    alerts.push({type:'alert-blue', icon:'💡', text:`<strong>Low RTO — pivot conversation:</strong> Freight leakage is low. Focus on NDR conversion speed and COD-to-prepaid shift instead.`});
+
+  if (cod < 25)
+    alerts.push({type:'alert-blue', icon:'💡', text:`<strong>Prepaid-first brand:</strong> Pre-Dispatch toggle hidden (low COD impact). Lead with NDR automation and tracking experience.`});
+
+  if (platform === 'shiprocket')
+    alerts.push({type:'alert-yellow', icon:'🔁', text:`<strong>On Shiprocket:</strong> Comparable on workflow and pricing. Don't compete on tech or cost — lead with KAM ownership and operational control.`});
+  else if (['other','delhivery','dtdc'].includes(platform))
+    alerts.push({type:'alert-yellow', icon:'🔁', text:`<strong>On ${plt.name}:</strong> Lead with serviceability gap — pincode-level performance variance, single-courier dependency risk. Then scale advantage.`});
+  else if (platform === 'bluedart')
+    alerts.push({type:'alert-yellow', icon:'🔁', text:`<strong>On Blue Dart:</strong> Strong on Tier 1 / metro. Lead with Tier 2/3 serviceability gaps and pincode-level routing — not scale.`});
+
+  htm('alerts-strip', alerts.slice(0,3).map(a =>
+    `<div class="alert-item ${a.type}"><span class="alert-icon">${a.icon}</span><span class="alert-text">${a.text}</span></div>`
+  ).join(''));
+}
+
+// ═══════════════════════════════════════════════
+// PERSONA
+// ═══════════════════════════════════════════════
+function renderPersona(c) {
+  const {orders, cod, rto, asp} = S;
+  let name, sub, match, urgency, urgClass;
+
+  if      (rto > 25 && cod > 50) { name='⟳ RTO Bleeder';      sub='High-volume COD brand';           match=Math.min(95,50+rto+cod/5); urgency='High urgency';  urgClass='urgency-high'; }
+  else if (asp > 2000 && rto<15)  { name='💎 Premium Seller';    sub='High-ASP, experience-focused';    match=Math.min(92,60+(asp-2000)/100); urgency='Med urgency'; urgClass='urgency-med'; }
+  else if (cod < 30)               { name='💳 Prepaid Champion';  sub='Low COD, digitally mature';       match=Math.min(88,60+(30-cod)); urgency='Low urgency'; urgClass='urgency-low'; }
+  else if (orders > 10000)         { name='🚀 Scale Player';      sub='High-volume, optimisation-ready'; match=Math.min(90,65+orders/1000); urgency='High urgency'; urgClass='urgency-high'; }
+  else                             { name='📦 Mid-market Grower'; sub='Growing brand, moderate exposure';match=55; urgency='Med urgency'; urgClass='urgency-med'; }
+
+  match = Math.round(match);
+  txt('persona-name', name); txt('persona-sub', sub);
+  txt('persona-pct', match + '%'); el('persona-fill').style.width = match + '%';
+  const pill = el('urgency-pill'); pill.textContent = urgency; pill.className = 'urgency-pill ' + urgClass;
+
+  const scores = {
+    p1: Math.min(100, rto*3+cod*0.5),
+    p4: Math.min(100, orders/200),
+    p3: Math.min(100, asp/50),
+    p5: Math.min(100, cod),
+    p2: Math.max(0, 100-rto*2),
+    p6: asp > 3000 ? 80 : 0,
+  };
+  Object.entries(scores).forEach(([k,v]) => {
+    const rv = Math.round(v);
+    const b = el('ps-'+k); if (b) b.style.width = rv + '%';
+    txt('pv-'+k, rv);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// REFERENCE TAB
+// ═══════════════════════════════════════════════
+function renderPriority(c) {
+  const {orders, cod, rto, asp} = S;
+  const cat = CAT_DATA[S.cat];
+  const plt = PLATFORM_DATA[S.platform];
+  const isShiprocket = S.platform === 'shiprocket';
+  const isAgg = ['other','delhivery','dtdc'].includes(S.platform);
+  const items = [];
+
+  if (rto > c.r.geoBenchmark + 5) items.push({color:'dot-red', title:'RTO above geo-adjusted benchmark — lead with freight number', detail:`${rto}% vs ~${c.r.geoBenchmark}% geo-adjusted median (typical range: ${cat.liveRange}). Freight bleed = ${fmt(c.totalBleed)}/mo. Show the number first, then the solution.`});
+  if (rto > 20)                items.push({color:'dot-red',    title:'High RTO level',                                  detail:`Every point drop = ${fmt(Math.round(c.rtoOrders/rto) * c.costPerRTO)} freight saved. Anchor on the per-point value.`});
+  if (cod > 60)                items.push({color:'dot-red',    title:'High COD — Pre-Dispatch highest ROI',              detail:`${Math.round(orders*cod/100).toLocaleString('en-IN')} COD orders/mo. Fake order freight risk is the lead argument.`});
+  if (asp > 2500)              items.push({color:'dot-yellow', title:'High ASP — Manual Calling toggle',                 detail:`Each recovered order saves ₹${S.rev} in RTO leg. At this ASP the agent cost is well covered.`});
+  if (rto < 10)                items.push({color:'dot-green',  title:'Low RTO — pivot to experience / NDR speed',        detail:`Freight leakage is low. Shift to NDR conversion speed and post-purchase experience.`});
+
+  if (isShiprocket) {
+    items.push({color:'dot-yellow', title:'Shiprocket — comparable on tech and pricing', detail:`Do NOT lead with tech or cost comparison. Lead with: dedicated KAM · weekly reviews · real-time WhatsApp/call · faster escalation. That's the operational ownership gap.`});
+  } else if (isAgg) {
+    items.push({color:'dot-yellow', title:`${plt.name} — scale-first argument`, detail:`Lead with: 10,000+ brands, 10+ couriers, stronger courier leverage, better commercial terms, faster pattern recognition. Platform tech is comparable. Scale isn't.`});
+  }
+
+  items.push({color:'dot-green', title:'KAM + operational ownership — always present', detail:`Dedicated KAM, real-time WhatsApp/call support, weekly/biweekly reviews, direct courier escalation. Not a ticket system. Mention this in every close.`});
+
+  htm('priority-items', items.map(a => `
+    <div class="priority-item">
+      <div class="pdot ${a.color}"></div>
+      <div><div class="pi-title">${a.title}</div><div class="pi-detail">${a.detail}</div></div>
+    </div>`).join(''));
+}
+
+function renderIntel(c) {
+  const cat = CAT_DATA[S.cat];
+  htm('intel-benchmarks', `
+    <div class="intel-stat">
+      <div><div class="is-label">Category</div></div>
+      <span class="is-value">${cat.label}</span>
+    </div>
+    <div class="intel-stat">
+      <div><div class="is-label">Typical RTO range (live-call use)</div><div class="is-source">${cat.source} · COD-heavy D2C</div></div>
+      <span class="is-value">${cat.liveRange}</span>
+    </div>
+    <div class="intel-stat">
+      <div><div class="is-label">Full observed range (context only)</div><div class="is-source">Includes prepaid-heavy and distress profiles</div></div>
+      <span class="is-value">${cat.rtoRange}</span>
+    </div>
+    <div class="intel-stat">
+      <div><div class="is-label">Geo-adjusted median (${S.geo === 'tier2' ? 'Tier 2/3' : S.geo === 'metro' ? 'Metro' : 'Tier 1'})</div><div class="is-source">Directional anchor for this account's geography</div></div>
+      <span class="is-value">~${c.r.geoBenchmark}%</span>
+    </div>
+    <div class="intel-stat">
+      <div><div class="is-label">Pre-dispatch RTO reduction</div><div class="is-source">Conservative operational benchmark · varies by COD mix</div></div>
+      <span class="is-value">${c.r.pdLo}–${c.r.pdHi}%</span>
+    </div>
+    <div class="intel-stat">
+      <div><div class="is-label">NDR recovery opportunity</div><div class="is-source">Delhivery FY24 directional · automated WhatsApp flows</div></div>
+      <span class="is-value">${c.r.ndrLo}–${c.r.ndrHi}%</span>
+    </div>
+    <div class="intel-stat">
+      <div><div class="is-label">Manual calling (high-ASP)</div><div class="is-source">Agent-led · ₹1,000+ ASP only · conservative</div></div>
+      <span class="is-value">${c.r.callLo}–${c.r.callHi}%</span>
+    </div>
+    <div class="intel-stat">
+      <div><div class="is-label">Time to first impact</div><div class="is-source">Pre-dispatch / NDR activation</div></div>
+      <span class="is-value">7–14 days</span>
+    </div>
+    <div class="intel-stat">
+      <div><div class="is-label">Courier partners</div></div>
+      <span class="is-value">10+</span>
+    </div>
+    <div class="intel-stat">
+      <div><div class="is-label">Brands on network</div></div>
+      <span class="is-value">10,000+</span>
+    </div>
+    <div class="source-note">Category RTO ranges: Unicommerce E-commerce Index H1 2024, Delhivery FY24 Annual Report, CRISIL Logistics 2023. Product impact ranges (pre-dispatch, NDR, calling) are conservative operational benchmarks derived from Shipway network observations, cross-referenced against public operational commentary where available. Actual results vary by COD mix, order profile, and courier set. Use as conversation anchors — not guarantees.</div>`
+  );
+}
+
+function renderPitch(c) {
+  const {orders, cod, rto, asp} = S;
+  const cat = CAT_DATA[S.cat];
+  const plt = PLATFORM_DATA[S.platform];
+  const isShiprocket = S.platform === 'shiprocket';
+  const isAgg = ['other','delhivery','dtdc'].includes(S.platform);
+
+  const steps = [
+    { title: 'Open with freight cost — not the product',
+      script: `"I ran a quick model: ${fmt(c.totalBleed)}/month in dead freight — ${c.rtoOrders.toLocaleString('en-IN')} RTOs × ₹${S.fwd + S.rev} per returned order (₹${S.fwd} forward + ₹${S.rev} RTO leg). Does that number feel roughly right?"` },
+    { title: 'Anchor with category benchmark',
+      script: `"${cat.label} typically runs ${cat.liveRange} for COD-heavy D2C brands (Unicommerce H1 2024 / CRISIL 2023). You're at ${rto}%. Closing that gap halfway = ${fmt(c.totalBleed * 0.12)} in freight savings alone."` },
+    { title: 'Validate costs live — Step 2 audit',
+      script: `"What are you paying for forward freight and RTO leg? I'll swap in your numbers right now so this model is yours." [Update audit-fwd and audit-rev inputs together]` },
+    ...(cod >= 30 ? [{
+      title: `Pre-Dispatch pitch — ${plt.name}`,
+      script: plt.pdPitch + ` Conversion objection: "These orders were never going to convert — they were always going to return. Freight cost drops. Conversion rate stays."`,
+    }] : []),
+    { title: `NDR automation pitch — ${plt.name}`,
+      script: plt.ndrPitch },
+    ...(asp > 1000 ? [{
+      title: 'Manual Calling — freight case',
+      script: `"At ₹${asp} ASP, the agent cost is well covered by the ₹${S.rev} RTO leg saved per recovered order. ${c.r.callLo}–${c.r.callHi}% recovery on your highest-value NDRs = ${fmt(c.callSaved)}/month in freight recovered."`,
+    }] : []),
+    { title: isShiprocket ? 'Objection: "We\'re on Shiprocket"'
+           : isAgg        ? `Objection: "We already use ${plt.name}"`
+           : 'Objection: Platform concerns',
+      script: `"${plt.aggregatorObjection}"` },
+    { title: 'Close on freight impact',
+      script: `"Total: ${fmt(c.freightSaved)} freight saved from pre-dispatch, ${fmt(c.freightRecovered)} freight recovered from NDR. COD remittance impact: ${fmt(c.codRemittance)} in cycle (${S.remit}-day remittance). Net monthly freight impact: ${fmt(c.netFreightImpact > 0 ? c.netFreightImpact : c.totalBleed * 0.15)}. Zero stack changes. Live in 7 days."` },
+  ];
+
+  htm('pitch-steps', steps.map((s, i) => `
+    <div class="pitch-step">
+      <div class="pitch-step-num">${i + 1}</div>
+      <div><div class="ps-title">${s.title}</div><div class="ps-script">${s.script}</div></div>
+    </div>`).join(''));
+}
+
+// ═══════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════
+function onSliderChange() {
+  S.orders   = parseInt(el('sl-orders').value);
+  S.cod      = parseInt(el('sl-cod').value);
+  S.rto      = parseInt(el('sl-rto').value);
+  S.asp      = parseInt(el('sl-asp').value);
+  S.cat      = el('sel-cat').value;
+  S.geo      = el('sel-geo').value;
+  S.platform = el('sel-platform').value;
+  S.remit    = Math.max(1, parseInt(el('inp-remit').value) || 7);
+
+  const nw = el('sel-weight').value;
+  if (nw !== S.weight) {
+    S.weight = nw;
+    const d = WEIGHT_DEFAULTS[S.weight];
+    S.fwd = d.fwd; S.rev = d.rev;
+    el('audit-fwd').value = S.fwd;
+    el('audit-rev').value = S.rev;
+  }
+  render();
+}
+
+function onAuditChange() {
+  S.fwd = parseFloat(el('audit-fwd').value) || 0;
+  S.rev = parseFloat(el('audit-rev').value) || 0;
+  render();
+}
+
+function onToggleChange() {
+  S.tPredispatch = el('tog-predispatch').checked;
+  S.tNdr         = el('tog-ndr').checked;
+  S.tCalling     = el('tog-calling').checked;
+  render();
+}
+
+function runAnalysis() {
+  onSliderChange();
+  const rp = document.querySelector('.right-panel');
+  rp.style.transition = 'opacity .12s';
+  rp.style.opacity = '0.45';
+  setTimeout(() => { rp.style.opacity = '1'; }, 130);
+}
+
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const ids = ['main','ref'];
+  document.querySelectorAll('.tab').forEach((t,i) => { if(ids[i]===id) t.classList.add('active'); });
+  const p = el('tab-'+id); if(p) p.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// COPY SUMMARY — freight-only, no margin
+// ═══════════════════════════════════════════════
+function copySummary() {
+  const c = calc();
+  const {orders, cod, rto, asp, fwd, rev} = S;
+  const cat = CAT_DATA[S.cat];
+  const plt = PLATFORM_DATA[S.platform];
+
+  const lines = [
+    '── Shipway Freight Analysis ──',
+    '',
+    `${Number(orders).toLocaleString('en-IN')} orders/mo  |  ${cod}% COD  |  ${rto}% RTO  |  ASP ₹${asp}`,
+    `Category: ${cat.label}  |  Platform: ${plt.name}`,
+    '',
+    `📛 Monthly freight leakage: ${fmt(c.totalBleed)}`,
+    `   Forward freight loss:  ${fmt(c.fwdLoss)}`,
+    `   RTO leg loss:          ${fmt(c.rtoLegLoss)}`,
+    `   Cost per RTO:          ₹${fwd + rev} (₹${fwd} fwd + ₹${rev} RTO leg)`,
+    `   RTO orders/mo:         ${c.rtoOrders.toLocaleString('en-IN')}`,
+    '',
+    `✅ Validated rates: Fwd ₹${fwd}  |  RTO leg ₹${rev}`,
+    `   Benchmark: ${cat.liveRange} typical · ${cat.rtoRange} full range (${cat.source})`,
+    '',
+    `💚 Projected freight recovery: +${fmt(c.netFreightImpact > 0 ? c.netFreightImpact : c.totalBleed * 0.15)}/month`,
+    `   Freight cost saved (pre-dispatch): ${fmt(c.freightSaved)}`,
+    `   Freight recovered (NDR / calling): ${fmt(c.freightRecovered)}`,
+    `   COD remittance impact (${S.remit}-day cycle): ${fmt(c.codRemittance)}`,
+    '',
+    `─────────────────────────────`,
+    `Why Shipway:`,
+    `• Comparable on workflow automation and pricing`,
+    `• Dedicated KAM — WhatsApp/call support, no ticket delays`,
+    `• Weekly/biweekly reviews on your specific account`,
+    `• 10,000+ brand network → stronger courier leverage & pattern recognition`,
+    `• 10+ courier partners → best-performing courier per pincode`,
+    `• Most aggregators process shipments. Shipway improves delivery outcomes.`,
+  ].join('\n');
+
+  navigator.clipboard.writeText(lines).then(() => {
+    const btn = el('copy-btn');
+    btn.textContent = '✅ Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copy for Zoom'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+render();
+</script>
+</body>
+</html>
